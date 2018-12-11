@@ -1,0 +1,82 @@
+---
+title: '2018-12-11'
+author: "Team challenge"
+date: "11 December 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(Amelia)
+library(tidyverse)
+library(janitor)
+library(lubridate)
+```
+
+## My first tidy tuesday!
+
+This is my first tidy tuesday- I will be looking into a sample of new york restaurant inspections. The goal is to spend a few hours and create some "insights".
+
+## Get the data sample
+
+This is the code from the github repo to recreate and save the data. 
+
+```{r, warning=FALSE}
+set.seed(20181209)
+
+# You can use this url to download the data directly into R (will take a few seconds)
+df <- read_csv("https://data.cityofnewyork.us/api/views/43nn-pn8j/rows.csv")
+
+# Cleaning names with janitor, sampling 300,000 records, and dropping some variables
+sampled_df <- df %>% 
+        janitor::clean_names() %>%
+        select(-phone, -grade_date, -record_date, -building, -street) %>% 
+        sample_n(size = 300000)
+
+# save the .csv
+write_csv(sampled_df, "nyc_restaurants.csv")
+```
+
+## Having a first look at the data
+
+
+```{r}
+trans_sampled_df <- sampled_df
+str(trans_sampled_df)
+
+trans_sampled_df <- trans_sampled_df %>% 
+  mutate_at(.vars = vars(boro, cuisine_description, action, violation_code, violation_description, grade, critical_flag, inspection_type), as.factor) 
+  
+trans_sampled_df <- trans_sampled_df %>% 
+  mutate(inspection_date = mdy(inspection_date))
+
+trans_sampled_df <- trans_sampled_df %>% 
+  mutate(boro = ifelse(boro == "Missing", NA, boro))
+
+summary(trans_sampled_df)
+
+```
+
+One of my first graphs that I look at is how much of the data is missing. For this I use the Amelia::missmap function. From here we see that the grade variable has the most missing and then a few that don't have score, discription and violation code. The few that have missing violation code are also the ones that don't have the description so it appears to be not missing at random for those few variables.
+```{r}
+missmap(trans_sampled_df)
+```
+
+## recreate the graphs in the article
+
+```{r}
+no_na_trans <- trans_sampled_df[complete.cases(trans_sampled_df), ]
+
+ggplot(no_na_trans, aes(x = date, y = , colour = grade))
+ggplot(sampled_df, aes(x = score)) +
+  geom_histogram()
+
+ggplot(sampled_df, aes(x = boro, y = ))
+  
+```
+
+
+## Cool ideas
+
+1) are the grades of the restaurants that closed better than those with grade pending?

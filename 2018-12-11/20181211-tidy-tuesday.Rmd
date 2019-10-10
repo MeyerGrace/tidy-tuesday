@@ -68,9 +68,28 @@ missmap(trans_sampled_df)
 ```{r}
 no_na_trans <- trans_sampled_df[complete.cases(trans_sampled_df), ]
 
+test <- no_na_trans %>% 
+  filter(grade %in% c("A", "B", "C")) %>% 
+  mutate(date = floor_date(inspection_date, unit = "months")) %>% 
+  group_by(date, grade) %>% 
+  summarise(count = n()) %>% 
+  ungroup() %>% 
+  group_by(date) %>% 
+  mutate(proportion = count/sum(count)*100) %>%
+  ungroup()
+
+ggplot(test, aes(x = date, y = proportion, colour = grade)) +
+  geom_line() + 
+  scale_color_discrete(c("red", "blue", "yellow"))
+
 ggplot(no_na_trans, aes(x = date, y = , colour = grade))
 ggplot(sampled_df, aes(x = score)) +
-  geom_histogram()
+  geom_histogram() 
+  #scale_color_discrete(c("red", "blue", "yellow"))
+  # scale_x_date(date_breaks = "1 month", 
+  #                labels = date_format("%b-%Y"),
+  #                limits = as.Date(c('2011-01-01','2013-01-01'))) +
+  #scale_color_discrete(c("red", "blue", "yellow"))
 
 ggplot(sampled_df, aes(x = boro, y = ))
   
